@@ -1,0 +1,74 @@
+{
+  "id": "mouse_tv_221188",
+  "name": "Mouse TV",
+  "background": "",
+  "area": {
+    "x": 0.11142454160789839,
+    "y": 0.6281147155618241,
+    "w": 0.7856840620592384,
+    "h": 0.34315937940761626
+  },
+  "animals": [
+    {
+      "id": "chuot_a1fe",
+      "name": "chuột",
+      "enabled": true,
+      "count": 1,
+      "size_pct": 7.0,
+      "facing": "right",
+      "anims": {},
+      "key": {
+        "enabled": true,
+        "tolerance": 22.0,
+        "softness": 14.0,
+        "shadow": 0.0,
+        "despill": 0.8,
+        "keep_largest": true
+      },
+      "walk_speed": [
+        60.0,
+        120.0
+      ],
+      "run_speed": [
+        300.0,
+        500.0
+      ],
+      "pause": [
+        0.3,
+        2.5
+      ],
+      "behaviors": {
+        "walk": 30.0,
+        "run": 35.0,
+        "idle": 20.0,
+        "turn": 8.0,
+        "hide": 7.0
+      },
+      "sounds": [],
+      "sound_enabled": true,
+      "sound_interval": [
+        6.0,
+        25.0
+      ],
+      "sound_volume": [
+        0.4,
+        0.8
+      ]
+    }
+  ],
+  "ambience": "",
+  "ambience_volume": 0.37,
+  "render": {
+    "duration": "00:30:00",
+    "width": 3840,
+    "height": 2160,
+    "fps": 30,
+    "seed": null,
+    "shadow": true,
+    "shadow_opacity": 0.37,
+    "depth_scale": false,
+    "encoder": "auto",
+    "crf": 22,
+    "chunk_seconds": 300
+  }
+}

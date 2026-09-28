@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Animal TV Generator</title>
+<link rel="stylesheet" href="/web/style.css">
+</head>
+<body>
+<header>
+  <h1>🐭 Animal TV Generator</h1>
+  <div class="proj">
+    <select id="projSel"></select>
+    <button id="projNew" class="ghost">+ Project mới</button>
+    <button id="projDel" class="ghost danger" title="Xóa project">🗑</button>
+  </div>
+  <div id="sys" class="muted"></div>
+</header>
+
+<main>
+  <aside id="left">
+    <section>
+      <h2>1. Background</h2>
+      <label class="drop" data-upload="background">
+        <input type="file" accept="image/*,video/*" hidden>
+        <span>Kéo thả ảnh nền (PNG/JPG) hoặc bấm để chọn</span>
+      </label>
+      <p class="hint">Chưa có nền thì tool dùng nền gỗ tạm. Nên dùng ảnh đúng tỉ lệ 16:9.</p>
+      <div class="row"><label>Vùng đi được</label><span class="muted">kéo khung vàng trên ảnh bên phải</span></div>
+    </section>
+
+    <section>
+      <h2>2. Con vật <button id="animalAdd" class="ghost small">+ Thêm con vật</button></h2>
+      <div id="presetPicker" class="presets" hidden>
+        <p class="hint">Chọn loại con vật. Tool đặt sẵn kích thước và kiểu chạy hợp với loài đó, sau vẫn chỉnh lại được.</p>
+        <div class="pbtns"></div>
+      </div>
+      <div id="animals"></div>
+    </section>
+
+    <section>
+      <h2>3. Âm nền</h2>
+      <label class="drop small" data-upload="ambience">
+        <input type="file" accept="audio/*" hidden>
+        <span id="ambName">Kéo thả âm nền (MP3/WAV), lặp suốt video</span>
+      </label>
+      <div class="row"><label>Âm lượng nền</label><input type="range" min="0" max="1" step="0.01" data-bind="ambience_volume"><output></output></div>
+      <button id="ambDel" class="ghost small">Bỏ âm nền</button>
+    </section>
+
+    <section>
+      <h2>4. Render</h2>
+      <div class="row"><label>Thời lượng</label>
+        <select id="durPreset"><option value="00:30:00">30 phút</option><option value="01:00:00">1 giờ</option><option value="02:00:00">2 giờ</option><option value="04:00:00">4 giờ</option><option value="08:00:00">8 giờ</option><option value="10:00:00">10 giờ</option><option value="">Tùy chỉnh…</option></select>
+        <input id="durCustom" data-bind="render.duration" placeholder="hh:mm:ss" size="8">
+      </div>
+      <div class="row"><label>Độ phân giải</label>
+        <select id="resSel"><option value="1280x720">720p</option><option value="1920x1080">1080p</option><option value="2560x1440">1440p</option><option value="3840x2160">4K</option></select>
+      </div>
+      <div class="row"><label>FPS</label>
+        <select data-bind="render.fps" data-type="int"><option>24</option><option>25</option><option>30</option><option>60</option></select>
+      </div>
+      <div class="row"><label>Seed</label><input data-bind="render.seed" data-type="intnull" placeholder="ngẫu nhiên" size="10"><button id="seedRnd" class="ghost small" title="Seed mới">🎲</button></div>
+      <div class="row"><label>Bóng đổ</label><input type="checkbox" data-bind="render.shadow"><input type="range" min="0" max="0.8" step="0.01" data-bind="render.shadow_opacity"><output></output></div>
+      <div class="row"><label>To hơn khi ở gần</label><input type="checkbox" data-bind="render.depth_scale"><span class="muted">phối cảnh: càng xuống dưới càng to</span></div>
+      <div class="row"><label>Chất lượng (CRF)</label><input type="range" min="14" max="30" step="1" data-bind="render.crf" data-type="int"><output></output></div>
+      <p class="hint">CRF nhỏ thì nét hơn nhưng file nặng hơn. 18–22 là hợp lý.</p>
+    </section>
+  </aside>
+
+  <section id="right">
+    <div class="stagewrap">
+      <div id="stage">
+        <canvas id="canvas"></canvas>
+      </div>
+      <div class="stagebar">
+        <button id="liveBtn" class="ghost small"></button>
+        <button id="liveSeed" class="ghost small" title="Xem một kịch bản chạy ngẫu nhiên khác">🎲 Cảnh khác</button>
+        <label class="muted"><input type="checkbox" id="liveSound"> 🔊 Nghe tiếng</label>
+        <span class="muted">Xem trực tiếp: video thật chuyển động giống thế này. Bấm vào con vật để chỉnh, kéo khung vàng để đổi vùng đi.</span>
+      </div>
+    </div>
+    <div class="actions">
+      <button id="btnPreview" class="primary">▶ Preview 60s</button>
+      <button id="btnRender" class="primary alt">⬇ Tạo video</button>
+      <span class="sep"></span>
+      <label>Batch <input id="batchN" type="number" min="1" max="50" value="3" size="3"></label>
+      <button id="btnBatch">Tạo N video (seed khác nhau)</button>
+      <button id="btnOpenOut" class="ghost">📂 Mở thư mục output</button>
+    </div>
+    <div id="player" hidden>
+      <video id="video" controls></video>
+    </div>
+    <h2>Công việc</h2>
+    <div id="jobs"></div>
+    <h2>Video đã tạo</h2>
+    <div id="outputs"></div>
+  </section>
+</main>
+
+<template id="animalTpl">
+  <div class="animal card">
+    <div class="ahead">
+      <div class="athumb"><img alt=""></div>
+      <input class="name" data-a="name" type="text" title="Tên con vật (dùng đặt tên file video)">
+      <label class="switch" title="Bật / tắt con vật này trong video"><input type="checkbox" data-a="enabled"><span></span></label>
+      <div class="stepper" title="Số con cùng lúc trên màn hình"><button class="ghost small minus">−</button><b class="cnt"></b><button class="ghost small plus">+</button></div>
+      <button class="ghost small fold" title="Thu gọn / mở">▾</button>
+      <button class="ghost small danger del" title="Xóa con vật">✕</button>
+    </div>
+    <div class="abody">
+      <div class="tabs">
+        <button data-tab="clips">🎞 Clip</button>
+        <button data-tab="motion">🏃 Chuyển động</button>
+        <button data-tab="key">🟩 Tách nền</button>
+        <button data-tab="sound">🔊 Tiếng kêu</button>
+      </div>
+
+      <div class="tab" data-tab="clips">
+        <div class="slots"></div>
+        <p class="hint">Kéo 1 hoặc nhiều clip vào đây. Tên file có chữ idle, walk, run (hoặc dung, di, chay) sẽ tự vào đúng ô. Chỉ cần 1 clip là chạy được.</p>
+        <div class="slotcfg"></div>
+      </div>
+
+      <div class="tab" data-tab="motion">
+        <div class="row"><label>Mẫu có sẵn</label><select class="preset"></select></div>
+        <div class="row"><label>Kích thước</label><input type="range" min="1" max="40" step="0.5" data-a="size_pct"><output></output><span class="muted">% ngang</span></div>
+        <div class="row"><label>Clip gốc nhìn về</label><button class="small facing"></button><span class="muted tip">thấy con vật đi giật lùi thì bấm đổi</span></div>
+        <div class="row"><label>Tốc độ</label><span class="lo">chậm</span><input type="range" class="spd" min="0" max="10" step="0.25"><span class="hi">nhanh</span></div>
+        <div class="row"><label>Hiếu động</label><span class="lo">hay nằm</span><input type="range" class="act" min="0" max="10" step="0.25"><span class="hi">chạy suốt</span></div>
+        <div class="row"><label>Nhút nhát</label><span class="lo">ở lại</span><input type="range" class="shy" min="0" max="10" step="0.25"><span class="hi">hay trốn</span></div>
+        <details class="adv">
+          <summary>Nâng cao: số chính xác</summary>
+          <div class="row"><label>Tốc độ đi</label><input type="number" data-a="walk_speed.0"> – <input type="number" data-a="walk_speed.1"><span class="muted">px/s</span></div>
+          <div class="row"><label>Tốc độ chạy</label><input type="number" data-a="run_speed.0"> – <input type="number" data-a="run_speed.1"><span class="muted">px/s</span></div>
+          <div class="row"><label>Dừng nghỉ</label><input type="number" step="0.1" data-a="pause.0"> – <input type="number" step="0.1" data-a="pause.1"><span class="muted">giây</span></div>
+          <p class="hint">Tần suất mỗi hành vi (tương đối):</p>
+          <div class="row"><label>Đi</label><input type="range" min="0" max="100" data-a="behaviors.walk"><output></output></div>
+          <div class="row"><label>Chạy vụt</label><input type="range" min="0" max="100" data-a="behaviors.run"><output></output></div>
+          <div class="row"><label>Đứng yên</label><input type="range" min="0" max="100" data-a="behaviors.idle"><output></output></div>
+          <div class="row"><label>Quay đầu</label><input type="range" min="0" max="100" data-a="behaviors.turn"><output></output></div>
+          <div class="row"><label>Trốn khỏi màn</label><input type="range" min="0" max="100" data-a="behaviors.hide"><output></output></div>
+        </details>
+      </div>
+
+      <div class="tab" data-tab="key">
+        <div class="keyprev"><img alt=""><span class="muted empty">Chưa có clip để xem thử</span></div>
+        <div class="row"><label>Bật tách nền</label><input type="checkbox" data-a="key.enabled"></div>
+        <div class="row"><label title="Tăng khi còn sót nền xanh; giảm khi bị ăn vào con vật">Xóa nền xanh</label><input type="range" min="0" max="80" step="1" data-a="key.tolerance"><output></output></div>
+        <div class="row"><label title="Độ mềm của viền">Viền mềm</label><input type="range" min="1" max="60" step="1" data-a="key.softness"><output></output></div>
+        <div class="row"><label title="Tăng khi còn bóng đổ / mặt sàn xanh đậm dưới chân">Xóa bóng / sàn</label><input type="range" min="0" max="60" step="1" data-a="key.shadow"><output></output></div>
+        <div class="row"><label title="Giảm ánh xanh hắt lên lông">Khử ánh xanh</label><input type="range" min="0" max="1" step="0.05" data-a="key.despill"><output></output></div>
+        <div class="row"><label>Bỏ đốm lẻ</label><input type="checkbox" data-a="key.keep_largest"></div>
+        <p class="keystate"></p>
+        <div class="row"><button class="small keyapply"></button><button class="ghost small keyreset">Về mặc định</button></div>
+      </div>
+
+      <div class="tab" data-tab="sound">
+        <label class="drop small sounds"><input type="file" accept="audio/*" multiple hidden><span>Kéo thả 1 hoặc nhiều file tiếng kêu</span></label>
+        <ul class="soundlist"></ul>
+        <div class="row"><label>Bật tiếng</label><input type="checkbox" data-a="sound_enabled"></div>
+        <div class="row"><label>Cách nhau</label><input type="number" step="0.5" data-a="sound_interval.0"> – <input type="number" step="0.5" data-a="sound_interval.1"><span class="muted">giây</span></div>
+        <div class="row"><label>Âm lượng</label><input type="number" step="0.05" min="0" max="1" data-a="sound_volume.0"> – <input type="number" step="0.05" min="0" max="1" data-a="sound_volume.1"></div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<div id="toast"></div>
+<script src="/web/app.js"></script>
+</body>
+</html>

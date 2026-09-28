@@ -1,0 +1,27 @@
+{
+  "id": "mouse_tv_5b43f9",
+  "name": "Mouse TV",
+  "background": "",
+  "area": {
+    "x": 0.05,
+    "y": 0.55,
+    "w": 0.9,
+    "h": 0.4
+  },
+  "animals": [],
+  "ambience": "",
+  "ambience_volume": 0.25,
+  "render": {
+    "duration": "01:00:00",
+    "width": 1920,
+    "height": 1080,
+    "fps": 30,
+    "seed": null,
+    "shadow": true,
+    "shadow_opacity": 0.35,
+    "depth_scale": false,
+    "encoder": "auto",
+    "crf": 20,
+    "chunk_seconds": 300
+  }
+}

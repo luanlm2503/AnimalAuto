@@ -1,0 +1,164 @@
+{
+  "file": "preview_mouse_tv_221188_1790589223.mp4",
+  "thumbnail": "preview_mouse_tv_221188_1790589223.jpg",
+  "seed": 671741034,
+  "duration": "00:01:00",
+  "duration_seconds": 60.0,
+  "width": 1280,
+  "height": 720,
+  "fps": 30,
+  "encoder": "libx264",
+  "crf": 22,
+  "chunks": 6,
+  "resumed_chunks": 0,
+  "workers": 6,
+  "render_seconds": 45.9,
+  "render_speed_x": 1.31,
+  "created": "2026-09-28T16:54:29",
+  "sound_events": 0,
+  "segments": 26,
+  "project": {
+    "id": "mouse_tv_221188",
+    "name": "Mouse TV",
+    "background": "",
+    "area": {
+      "x": 0.01974612129760217,
+      "y": 0.22943112364833096,
+      "w": 0.7856840620592384,
+      "h": 0.34315937940761626
+    },
+    "animals": [
+      {
+        "id": "chuot_f621",
+        "name": "chuột",
+        "enabled": true,
+        "count": 1,
+        "size_pct": 7.0,
+        "facing": "right",
+        "anims": {
+          "idle": {
+            "src": "src/generated_video_september_28_2026_4_31pm_d263.mp4",
+            "frames": 192,
+            "fps": 24.0,
+            "width": 950,
+            "height": 512,
+            "px_scale": 0.8752136752136752,
+            "loop": "loop",
+            "native_speed": 0.0,
+            "scale": 1.0,
+            "trim_start": 0.0,
+            "trim_end": 0.0,
+            "auto_loop": false,
+            "stabilize": true,
+            "key_used": {
+              "enabled": true,
+              "tolerance": 22.0,
+              "softness": 14.0,
+              "shadow": 0.0,
+              "despill": 0.8,
+              "keep_largest": true
+            }
+          },
+          "walk": {
+            "src": "src/generated_video_september_28_2026_4_31pm_eed7.mp4",
+            "frames": 192,
+            "fps": 24.0,
+            "width": 1189,
+            "height": 512,
+            "px_scale": 0.9292196007259528,
+            "loop": "loop",
+            "native_speed": 0.0,
+            "scale": 1.0,
+            "trim_start": 0.0,
+            "trim_end": 0.0,
+            "auto_loop": false,
+            "stabilize": true,
+            "key_used": {
+              "enabled": true,
+              "tolerance": 22.0,
+              "softness": 14.0,
+              "shadow": 0.0,
+              "despill": 0.8,
+              "keep_largest": true
+            }
+          },
+          "run": {
+            "src": "src/generated_video_september_28_2026_4_29pm_0af9.mp4",
+            "frames": 192,
+            "fps": 24.0,
+            "width": 1189,
+            "height": 512,
+            "px_scale": 0.9292196007259528,
+            "loop": "loop",
+            "native_speed": 0.0,
+            "scale": 1.0,
+            "trim_start": 0.0,
+            "trim_end": 0.0,
+            "auto_loop": false,
+            "stabilize": true,
+            "key_used": {
+              "enabled": true,
+              "tolerance": 22.0,
+              "softness": 14.0,
+              "shadow": 0.0,
+              "despill": 0.8,
+              "keep_largest": true
+            }
+          }
+        },
+        "key": {
+          "enabled": true,
+          "tolerance": 22.0,
+          "softness": 14.0,
+          "shadow": 0.0,
+          "despill": 0.8,
+          "keep_largest": true
+        },
+        "walk_speed": [
+          60.0,
+          120.0
+        ],
+        "run_speed": [
+          300.0,
+          500.0
+        ],
+        "pause": [
+          0.3,
+          2.5
+        ],
+        "behaviors": {
+          "walk": 30.0,
+          "run": 35.0,
+          "idle": 20.0,
+          "turn": 8.0,
+          "hide": 7.0
+        },
+        "sounds": [],
+        "sound_enabled": true,
+        "sound_interval": [
+          6.0,
+          25.0
+        ],
+        "sound_volume": [
+          0.4,
+          0.8
+        ]
+      }
+    ],
+    "ambience": "",
+    "ambience_volume": 0.37,
+    "render": {
+      "duration": "00:30:00",
+      "width": 3840,
+      "height": 2160,
+      "fps": 30,
+      "seed": null,
+      "shadow": true,
+      "shadow_opacity": 0.37,
+      "depth_scale": false,
+      "encoder": "auto",
+      "crf": 22,
+      "chunk_seconds": 300
+    }
+  }
+}
