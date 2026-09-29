@@ -55,3 +55,39 @@ def test_compositor_alpha(tmp_path):
     # partly off-screen must not crash
     comp.render([State(0, 0, 2.0, 5.0, 1, "idle", 0, 1.0, 1.0)])
     comp.render([State(0, 0, 500.0, 500.0, 1, "idle", 0, 1.0, 1.0)])
+
+
+def test_compositor_offsets_airborne_sprite_but_keeps_shadow_grounded(tmp_path):
+    p = Project(id="t", name="t")
+    p.render.shadow = False
+    comp = Compositor(p, tmp_path, 200, 100, 200.0)
+    comp.bg[:] = (0, 0, 0)
+    sprite = np.zeros((10, 20, 4), np.uint8)
+    sprite[..., 2] = 255
+    sprite[..., 3] = 255
+    comp.sprites.base[(0, "idle")] = [sprite]
+    comp.sprites.src_face[0] = 1
+    ground = comp.render([State(0, 0, 100, 50, 1, "idle", 0, 1, 1, 0)])
+    airborne = comp.render([State(0, 0, 100, 50, 1, "idle", 0, 1, 1, 20)])
+    assert tuple(ground[45, 100]) == (0, 0, 255)
+    assert tuple(airborne[25, 100]) == (0, 0, 255)
+    assert tuple(airborne[45, 100]) == (0, 0, 0)
+
+
+def test_airborne_shadow_fades_with_altitude(tmp_path):
+    p = Project(id="t", name="t")
+    p.render.shadow = True
+    p.render.shadow_opacity = 0.8
+    comp = Compositor(p, tmp_path, 200, 100, 200.0)
+    comp.bg[:] = (255, 255, 255)
+    sprite = np.zeros((10, 20, 4), np.uint8)
+    sprite[..., 2] = 255
+    sprite[..., 3] = 255
+    comp.sprites.base[(0, "idle")] = [sprite]
+    comp.sprites.src_face[0] = 1
+    ground = comp.render([State(0, 0, 100, 50, 1, "idle", 0, 1, 1, 0)])
+    airborne = comp.render([State(0, 0, 100, 50, 1, "idle", 0, 1, 1, 100)])
+    assert ground[50, 100, 0] < airborne[50, 100, 0] < 255
+    assert airborne[50, 100, 0] > ground[50, 100, 0]
+    assert airborne[50, 100, 0] < 255
+

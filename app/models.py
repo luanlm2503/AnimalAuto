@@ -1,9 +1,17 @@
 """Project configuration models (saved as projects/<id>/project.json)."""
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 ANIMS = ("idle", "walk", "run")
+
+
+class Area(BaseModel):
+    """Walkable area for the animal's feet, as fractions of the frame."""
+    x: float = 0.05
+    y: float = 0.55
+    w: float = 0.90
+    h: float = 0.40
 
 
 class KeyCfg(BaseModel):
@@ -34,11 +42,43 @@ class AnimSet(BaseModel):
     key_used: Optional[dict] = None   # key settings this import was made with (UI shows "not applied yet")
 
 
+class FlightCfg(BaseModel):
+    """Optional flight behaviour; altitude and speed are relative to the frame."""
+    enabled: bool = False
+    anim: str = "run"             # existing animation slot used for flapping
+    speed: list[float] = Field(default_factory=lambda: [250.0, 450.0])
+    altitude: list[float] = Field(default_factory=lambda: [0.12, 0.32])  # fraction of frame height
+    legs: list[int] = Field(default_factory=lambda: [1, 3])
+    hover: float = 0.0             # probability of a brief mid-flight hover
+    wobble: float = 0.0            # vertical flutter in reference pixels
+    wobble_hz: float = 2.0
+
+    @model_validator(mode="after")
+    def normalize(self):
+        self.speed = [max(5.0, float(v)) for v in self.speed[:2]]
+        self.altitude = [min(max(0.0, float(v)), 0.9) for v in self.altitude[:2]]
+        self.legs = [min(max(1, int(v)), 8) for v in self.legs[:2]]
+        for field, default in (("speed", [250.0, 450.0]), ("altitude", [0.12, 0.32]), ("legs", [1, 3])):
+            values = getattr(self, field)
+            if not values:
+                setattr(self, field, default)
+            elif len(values) == 1:
+                values.append(values[0])
+        self.hover = min(max(float(self.hover), 0.0), 1.0)
+        self.wobble = min(max(float(self.wobble), 0.0), 200.0)
+        self.wobble_hz = min(max(float(self.wobble_hz), 0.0), 20.0)
+        if self.anim not in ANIMS:
+            self.anim = "run"
+        return self
+
+
 class Animal(BaseModel):
     id: str
     name: str = "mouse"
     enabled: bool = True         # off = kept in the project but left out of videos
     count: int = 1
+    area: Optional[Area] = None  # None = use the project-wide walkable area
+    flight: FlightCfg = Field(default_factory=FlightCfg)
     size_pct: float = 7.0        # sprite width as % of the frame width
     facing: str = "right"        # direction the source clip faces
     anims: dict[str, AnimSet] = Field(default_factory=dict)
@@ -47,19 +87,11 @@ class Animal(BaseModel):
     run_speed: list[float] = Field(default_factory=lambda: [250.0, 450.0])
     pause: list[float] = Field(default_factory=lambda: [0.4, 3.0])
     behaviors: dict[str, float] = Field(
-        default_factory=lambda: {"walk": 30, "run": 30, "idle": 25, "turn": 8, "hide": 7})
+        default_factory=lambda: {"walk": 30, "run": 30, "idle": 25, "turn": 8, "hide": 7, "fly": 0})
     sounds: list[str] = Field(default_factory=list)
     sound_enabled: bool = True
     sound_interval: list[float] = Field(default_factory=lambda: [6.0, 25.0])
     sound_volume: list[float] = Field(default_factory=lambda: [0.4, 0.8])
-
-
-class Area(BaseModel):
-    """Walkable area for the animal's feet, as fractions of the frame."""
-    x: float = 0.05
-    y: float = 0.55
-    w: float = 0.90
-    h: float = 0.40
 
 
 class RenderCfg(BaseModel):

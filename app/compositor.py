@@ -111,9 +111,11 @@ class Compositor:
             sh, sw = a.shape[:2]
             fx, fy = st.x * self.k, st.y * self.k
             x0 = int(round(fx - sw / 2))
-            y0 = int(round(fy - sh))
+            y0 = int(round(fy - st.z * self.k - sh))
             if self.shadow and self.shadow_op > 0:
-                shw = max(4, int(sw * 0.8))
+                altitude = max(0.0, st.z * self.k)
+                fade = 1.0 / (1.0 + altitude / max(2 * sh, 1.0))
+                shw = max(4, int(sw * 0.8 * (0.6 + 0.4 * fade)))
                 shh = max(3, int(sh * 0.14))
                 m = self._shadow(shw, shh)
                 mx0 = int(round(fx - m.shape[1] / 2))
@@ -123,7 +125,7 @@ class Compositor:
                     cx0, cy0, cx1, cy1, ox, oy = c
                     reg = frame[cy0:cy1, cx0:cx1]
                     mm = m[oy:oy + cy1 - cy0, ox:ox + cx1 - cx0]
-                    reg[:] = (reg * (1.0 - mm * self.shadow_op)).astype(np.uint8)
+                    reg[:] = (reg * (1.0 - mm * self.shadow_op * fade)).astype(np.uint8)
             c = self._clip(x0, y0, sw, sh, W, H)
             if not c:
                 continue

@@ -10,11 +10,11 @@
   },
   "animals": [
     {
-      "id": "chuot_a1fe",
-      "name": "chuột",
+      "id": "chim_9d7e",
+      "name": "chim",
       "enabled": true,
       "count": 1,
-      "size_pct": 7.0,
+      "size_pct": 6.0,
       "facing": "right",
       "anims": {},
       "key": {
@@ -26,23 +26,23 @@
         "keep_largest": true
       },
       "walk_speed": [
-        60.0,
-        120.0
+        40.0,
+        80.0
       ],
       "run_speed": [
-        300.0,
-        500.0
+        150.0,
+        260.0
       ],
       "pause": [
         0.3,
-        2.5
+        2.0
       ],
       "behaviors": {
         "walk": 30.0,
-        "run": 35.0,
-        "idle": 20.0,
-        "turn": 8.0,
-        "hide": 7.0
+        "run": 25.0,
+        "idle": 30.0,
+        "turn": 10.0,
+        "hide": 5.0
       },
       "sounds": [],
       "sound_enabled": true,
@@ -59,7 +59,7 @@
   "ambience": "",
   "ambience_volume": 0.37,
   "render": {
-    "duration": "00:30:00",
+    "duration": "00:05:00",
     "width": 3840,
     "height": 2160,
     "fps": 30,

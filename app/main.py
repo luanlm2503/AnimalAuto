@@ -174,7 +174,8 @@ def background_image(pid: str):
 def add_animal(pid: str, name: str = Body("mouse", embed=True)):
     with lock(pid):
         p = get_project(pid)
-        a = Animal(id=f"{store.slug(name, 'animal')}_{secrets.token_hex(2)}", name=name)
+        a = Animal(id=f"{store.slug(name, 'animal')}_{secrets.token_hex(2)}", name=name,
+                   area=p.area.model_copy(deep=True))
         p.animals.append(a)
         return store.save_project(p)
 
@@ -306,9 +307,10 @@ def live_timeline(pid: str, seconds: float = Body(120.0, embed=True), seed: int 
     r = lambda v, n=1: round(v, n)
     return {"ref": [tl.ref_w, tl.ref_h], "duration": tl.duration,
             "tracks": [{"animal": p.animals[t.animal].id,
+                        "instance": t.instance,
                         "segs": [[r(s.t0, 3), r(s.t1, 3), s.kind, r(s.x0), r(s.y0), r(s.cx), r(s.cy),
-                                  r(s.x1), r(s.y1), s.anim, s.face, r(s.accel, 3), r(s.phase0, 2)]
-                                 for s in t.segs]} for t in tl.tracks],
+                                  r(s.x1), r(s.y1), s.anim, s.face, r(s.accel, 3), r(s.phase0, 2),
+                                  r(s.z0), r(s.z1), r(s.dist, 2)] for s in t.segs]} for t in tl.tracks],
             "sounds": [[r(e.t, 2), p.animals[e.animal].id, e.file, r(e.volume, 2)] for e in tl.sounds]}
 
 

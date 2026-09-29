@@ -26,7 +26,7 @@
         <span>Kéo thả ảnh nền (PNG/JPG) hoặc bấm để chọn</span>
       </label>
       <p class="hint">Chưa có nền thì tool dùng nền gỗ tạm. Nên dùng ảnh đúng tỉ lệ 16:9.</p>
-      <div class="row"><label>Vùng đi được</label><span class="muted">kéo khung vàng trên ảnh bên phải</span></div>
+      <div class="row"><label>Vùng chung</label><span class="muted">kéo khung vàng; chọn con vật để chỉnh vùng riêng</span></div>
     </section>
 
     <section>
@@ -72,6 +72,10 @@
     <div class="stagewrap">
       <div id="stage">
         <canvas id="canvas"></canvas>
+      </div>
+      <div class="areabar">
+        <span id="areaMode">Đang sửa: Vùng chung</span>
+        <button id="areaGlobal" class="ghost small">Sửa vùng chung</button>
       </div>
       <div class="stagebar">
         <button id="liveBtn" class="ghost small"></button>
@@ -124,11 +128,23 @@
 
       <div class="tab" data-tab="motion">
         <div class="row"><label>Mẫu có sẵn</label><select class="preset"></select></div>
+        <div class="row"><label>Vùng hoạt động</label><label><input type="checkbox" class="ownarea"> Vùng riêng cho con này</label></div>
+        <p class="hint areahint">Bật để sao chép vùng chung, rồi chọn con vật và kéo khung trên ảnh. Tắt để dùng vùng chung.</p>
         <div class="row"><label>Kích thước</label><input type="range" min="1" max="40" step="0.5" data-a="size_pct"><output></output><span class="muted">% ngang</span></div>
         <div class="row"><label>Clip gốc nhìn về</label><button class="small facing"></button><span class="muted tip">thấy con vật đi giật lùi thì bấm đổi</span></div>
         <div class="row"><label>Tốc độ</label><span class="lo">chậm</span><input type="range" class="spd" min="0" max="10" step="0.25"><span class="hi">nhanh</span></div>
         <div class="row"><label>Hiếu động</label><span class="lo">hay nằm</span><input type="range" class="act" min="0" max="10" step="0.25"><span class="hi">chạy suốt</span></div>
         <div class="row"><label>Nhút nhát</label><span class="lo">ở lại</span><input type="range" class="shy" min="0" max="10" step="0.25"><span class="hi">hay trốn</span></div>
+        <details class="adv flightcfg">
+          <summary>Bay (chim / bướm)</summary>
+          <div class="row"><label>Bật bay</label><input type="checkbox" data-a="flight.enabled"></div>
+          <div class="row"><label>Tốc độ bay</label><input type="number" data-a="flight.speed.0"> – <input type="number" data-a="flight.speed.1"><span class="muted">px/s</span></div>
+          <div class="row"><label>Độ cao</label><input type="number" min="0" max="1" step="0.01" data-a="flight.altitude.0"> – <input type="number" min="0" max="1" step="0.01" data-a="flight.altitude.1"><span class="muted">tỉ lệ chiều cao</span></div>
+          <div class="row"><label>Số chặng mỗi lần</label><input type="number" min="1" max="8" data-a="flight.legs.0"> – <input type="number" min="1" max="8" data-a="flight.legs.1"></div>
+          <div class="row"><label>Lơ lửng giữa chặng</label><input type="range" min="0" max="1" step="0.05" data-a="flight.hover"><output></output></div>
+          <div class="row"><label>Độ lắc cánh</label><input type="number" min="0" max="80" data-a="flight.wobble"><span class="muted">px</span></div>
+          <p class="hint">Dùng clip “Chạy” làm clip vỗ cánh / bay; tốc độ tính bằng pixel tham chiếu mỗi giây, độ cao là tỉ lệ chiều cao khung hình.</p>
+        </details>
         <details class="adv">
           <summary>Nâng cao: số chính xác</summary>
           <div class="row"><label>Tốc độ đi</label><input type="number" data-a="walk_speed.0"> – <input type="number" data-a="walk_speed.1"><span class="muted">px/s</span></div>

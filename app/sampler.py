@@ -19,6 +19,7 @@ class State:
     frame: int
     scale: float       # depth scale factor
     squash: float      # 1.0 normally, <1 while turning (horizontal squash)
+    z: float = 0.0     # altitude above the ground point, in reference pixels
 
 
 def resolve_anim(anims: dict[str, AnimSet], want: str) -> str | None:
@@ -53,6 +54,7 @@ class Sampler:
         self.ref_w = {}
         for ai, animal in enumerate(project.animals):
             self.ref_w[ai] = sprite_ref_box(animal, timeline.ref_w)[0]
+        # Perspective remains scene-wide so animals share one depth scale.
         ar = project.area
         self.depth = project.render.depth_scale
         self.y_top = ar.y * timeline.ref_h
@@ -88,12 +90,17 @@ class Sampler:
                 x, y = bezier(s.x0, s.y0, s.cx, s.cy, s.x1, s.y1, frac)
                 want = s.anim
             else:
+                frac = u
                 x, y = s.x0, s.y0
-                want = "idle"
+                want = s.anim or "idle"
                 if s.kind == SEG_TURN:
                     squash = max(0.15, abs(math.cos(math.pi * u)))
                     if u >= 0.5:
                         face = -s.face
+            zbase = s.z0 + (s.z1 - s.z0) * (u * u * (3 - 2 * u))
+            cfg = animal.flight
+            wobble = cfg.wobble * math.sin(2 * math.pi * cfg.wobble_hz * t + tr.instance * 1.7)
+            z = max(0.0, zbase + wobble * min(1.0, zbase / max(2 * cfg.wobble, 1.0)))
             name = resolve_anim(animal.anims, want)
             if name is None:
                 continue
@@ -108,6 +115,6 @@ class Sampler:
             else:
                 phase = s.phase0 * a.fps + elapsed * a.fps
             out.append(State(tr.animal, tr.instance, x, y, face, name, frame_index(a, phase),
-                             scale, squash))
+                             scale, squash, z))
         out.sort(key=lambda st: st.y)
         return out

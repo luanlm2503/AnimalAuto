@@ -117,6 +117,8 @@ function renderAll() {
   $("#ambName").textContent = P.ambience ? "Âm nền: " + P.ambience.split("/").pop() + " (kéo file khác để thay)" : "Kéo thả âm nền (MP3/WAV), lặp suốt video";
   $("#stage").style.aspectRatio = `${P.render.width} / ${P.render.height}`;
   renderAnimals();
+  if (!P.animals.some(a => a.id === selectedAnimal)) selectedAnimal = null;
+  updateAreaMode();
   loadBackground();
   refreshLive();
 }
@@ -127,8 +129,10 @@ const PRESETS = {
   hamster: { icon: "🐹", label: "Hamster",   name: "hamster",   size_pct: 6.5, walk_speed: [40, 90],  run_speed: [180, 300], pause: [0.5, 3.0], behaviors: { walk: 35, run: 20, idle: 35, turn: 8, hide: 2 } },
   cat:     { icon: "🐱", label: "Mèo",       name: "mèo",       size_pct: 18,  walk_speed: [70, 130], run_speed: [350, 600], pause: [1.0, 5.0], behaviors: { walk: 30, run: 15, idle: 45, turn: 8, hide: 2 } },
   dog:     { icon: "🐶", label: "Chó",       name: "chó",       size_pct: 20,  walk_speed: [90, 160], run_speed: [400, 700], pause: [0.5, 3.0], behaviors: { walk: 35, run: 30, idle: 25, turn: 8, hide: 2 } },
-  bird:    { icon: "🐦", label: "Chim",      name: "chim",      size_pct: 6,   walk_speed: [40, 80],  run_speed: [150, 260], pause: [0.3, 2.0], behaviors: { walk: 30, run: 25, idle: 30, turn: 10, hide: 5 } },
-  bug:     { icon: "🐞", label: "Côn trùng", name: "côn trùng", size_pct: 3.5, walk_speed: [25, 55],  run_speed: [80, 140],  pause: [0.5, 3.0], behaviors: { walk: 50, run: 10, idle: 30, turn: 10, hide: 0 } },
+  bird:     { icon: "🐦", label: "Chim",      name: "chim",      size_pct: 7,   walk_speed: [35, 70],  run_speed: [180, 300], pause: [0.6, 2.8], behaviors: { walk: 24, run: 0, idle: 38, turn: 8, hide: 0, fly: 30 }, flight: { enabled: true, anim: "run", speed: [260, 430], altitude: [0.12, 0.32], legs: [1, 3], hover: 0.05, wobble: 2, wobble_hz: 2.4 } },
+  lizard:   { icon: "🦎", label: "Thằn lằn", name: "thằn lằn", size_pct: 8,   walk_speed: [35, 65],  run_speed: [320, 560], pause: [1.5, 6], behaviors: { walk: 18, run: 24, idle: 48, turn: 6, hide: 4, fly: 0 }, flight: { enabled: false } },
+  butterfly:{ icon: "🦋", label: "Bướm",      name: "bướm",      size_pct: 5,   walk_speed: [10, 25],  run_speed: [80, 140], pause: [1.2, 4], behaviors: { walk: 8, run: 0, idle: 32, turn: 5, hide: 0, fly: 55 }, flight: { enabled: true, anim: "run", speed: [90, 155], altitude: [0.06, 0.28], legs: [2, 4], hover: 0.45, wobble: 14, wobble_hz: 3.2 } },
+  bug:      { icon: "🐞", label: "Côn trùng", name: "côn trùng", size_pct: 3.5, walk_speed: [25, 55],  run_speed: [80, 140],  pause: [0.5, 3.0], behaviors: { walk: 50, run: 10, idle: 30, turn: 10, hide: 0, fly: 0 }, flight: { enabled: false } },
   fish:    { icon: "🐟", label: "Cá",        name: "cá",        size_pct: 10,  walk_speed: [50, 100], run_speed: [200, 350], pause: [0.2, 1.5], behaviors: { walk: 45, run: 15, idle: 25, turn: 10, hide: 5 } },
   other:   { icon: "✏️", label: "Khác…",     name: "",          size_pct: 7,   walk_speed: [60, 120], run_speed: [250, 450], pause: [0.4, 3.0], behaviors: { walk: 30, run: 30, idle: 25, turn: 8, hide: 7 } },
 };
@@ -140,6 +144,22 @@ let selectedAnimal = null;
 const lerp = (a, b, t) => a + (b - a) * t;
 const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
 const hasClip = (a, n) => a.anims[n]?.frames > 0;
+const areaOf = a => a?.area ?? P.area;
+const editTarget = () => P.animals.find(a => a.id === selectedAnimal) || null;
+const editArea = () => areaOf(editTarget());
+
+function updateAreaMode() {
+  const selected = P.animals.find(a => a.id === selectedAnimal);
+  const a = editTarget();
+  $("#areaMode").textContent = a?.area ? `Đang sửa: Vùng của ${a.name}`
+    : a ? `Đang sửa: Vùng chung · kéo để tạo vùng riêng cho ${a.name}` : "Đang sửa: Vùng chung";
+  $("#areaGlobal").hidden = !selected;
+}
+
+function editAreaForAnimal(a) {
+  if (!a.area) a.area = { ...P.area };
+  return a.area;
+}
 
 function hash(s) {
   let h = 5381;
@@ -156,6 +176,7 @@ function applyPreset(a, key) {
   a.run_speed = [...p.run_speed];
   a.pause = [...p.pause];
   a.behaviors = { ...p.behaviors };
+  a.flight = { enabled: false, anim: "run", speed: [...p.run_speed], altitude: [0.1, 0.3], legs: [1, 3], hover: 0, wobble: 0, wobble_hz: 2, ...p.flight };
 }
 
 // simple 0..10 sliders <-> exact numbers
@@ -172,12 +193,12 @@ function setSpeed(a, s) {
   a.run_speed = [Math.round(base * ratio * 0.8), Math.round(base * ratio * 1.2)];
 }
 function activityLevel(a) {
-  const b = a.behaviors, mv = (+b.walk || 0) + (+b.run || 0);
+  const b = a.behaviors, mv = (+b.walk || 0) + (+b.run || 0) + (+b.fly || 0);
   return clamp((mv / Math.max(1e-6, mv + (+b.idle || 0)) - 0.2) / 0.075, 0, 10);
 }
 function setActivity(a, v) {
   const b = a.behaviors;
-  let mv = (+b.walk || 0) + (+b.run || 0);
+  let mv = (+b.walk || 0) + (+b.run || 0) + (+b.fly || 0);
   if (mv <= 0) { b.walk = 30; b.run = 20; mv = 50; }
   const f = 0.2 + 0.075 * v;                       // share of time spent moving
   b.idle = Math.round(mv * (1 - f) / f);
@@ -190,7 +211,7 @@ function shyLevel(a) {
 }
 function setShy(a, v) {
   const b = a.behaviors, h = 0.03 * v;
-  const rest = (+b.walk || 0) + (+b.run || 0) + (+b.idle || 0) + (+b.turn || 0);
+  const rest = (+b.walk || 0) + (+b.run || 0) + (+b.fly || 0) + (+b.idle || 0) + (+b.turn || 0);
   b.hide = Math.round(rest * h / (1 - h));
   normWeights(b);
 }
@@ -213,6 +234,7 @@ function refreshCard(a) {
 function selectAnimal(id, fromStage = false) {
   selectedAnimal = id;
   for (const c of $$(".animal")) c.classList.toggle("selected", c.dataset.id === id);
+  updateAreaMode();
   if (!fromStage) return;
   const card = $(`.animal[data-id="${id}"]`);
   if (!card) return;
@@ -242,6 +264,7 @@ function animalCard(a) {
       if (k.startsWith("key.")) { keyPreview(el, a); updateKeyState(el, a); }
       if (k === "enabled") el.classList.toggle("off", !a.enabled);
       if (/^(behaviors|walk_speed|run_speed|pause)/.test(k)) syncSimple(el, a);
+      if (k.startsWith("flight.")) refreshLive();
       scheduleSave();
     });
   }
@@ -430,6 +453,14 @@ function buildMotion(card, a) {
       scheduleSave();
     });
   }
+  const ownArea = $(".ownarea", card);
+  ownArea.checked = !!a.area;
+  ownArea.onchange = () => {
+    a.area = ownArea.checked ? { ...P.area } : null;
+    selectAnimal(a.id);
+    updateAreaMode();
+    scheduleSave();
+  };
   syncSimple(card, a);
 }
 
@@ -555,6 +586,7 @@ async function addAnimal(key) {
   await saveNow();
   const p = await api("POST", `/api/projects/${P.id}/animals`, { name });
   const a = p.animals.at(-1);
+  a.area = { ...p.area };
   applyPreset(a, key);
   $("#presetPicker").hidden = true;
   selectedAnimal = a.id;
@@ -658,10 +690,10 @@ function sampleLive(t) {
       while (lo < hi) { const m = (lo + hi) >> 1; if (tr.starts[m] <= t) lo = m + 1; else hi = m; }
       i = tr.cur = Math.max(0, lo - 1);
     }
-    const [t0, t1, kind, x0, y0, cx, cy, x1, y1, anim, face0, accel, phase0] = segs[i];
+    const [t0, t1, kind, x0, y0, cx, cy, x1, y1, anim, face0, accel, phase0, z0 = 0, z1 = 0, dist = 0] = segs[i];
     if (kind === "hidden") continue;
     const u = clamp((t - t0) / Math.max(t1 - t0, 1e-6), 0, 1);
-    let x = x0, y = y0, want = "idle", face = face0, squash = 1;
+    let x = x0, y = y0, want = anim || "idle", face = face0, squash = 1;
     if (kind === "move") {
       const f = trapPos(u, accel), v = 1 - f;
       x = v * v * x0 + 2 * v * f * cx + f * f * x1;
@@ -671,10 +703,21 @@ function sampleLive(t) {
       squash = Math.max(0.15, Math.abs(Math.cos(Math.PI * u)));
       if (u >= 0.5) face = -face0;
     }
+    const zbase = z0 + (z1 - z0) * (u * u * (3 - 2 * u));
+    const fc = a.flight || {};
+    const wobble = fc.enabled ? (fc.wobble || 0) * Math.sin(2 * Math.PI * (fc.wobble_hz || 2) * t + (tr.instance || 0) * 1.7) : 0;
+    const z = Math.max(0, zbase + wobble * Math.min(1, zbase / Math.max(2 * (fc.wobble || 0), 1)));
     const name = resolveAnim(a, want);
     if (!name) continue;
     const an = a.anims[name];
-    out.push({ a, name, an, x, y, face, squash, frame: frameIndex(an, (phase0 + t - t0) * an.fps) });
+    let phase = phase0 * an.fps + (t - t0) * an.fps;
+    if (kind === "move" && an.native_speed > 0 && name !== "idle") {
+      const scale = depthOf(y, refH);
+      const spriteScale = (a.size_pct / 100 * refW) * scale * an.scale / Math.max(an.width / an.px_scale, 1);
+      const refSpeed = an.native_speed * spriteScale;
+      phase = phase0 + f * dist / Math.max(refSpeed, 1e-3) * an.fps;
+    }
+    out.push({ a, name, an, x, y, z, face, squash, frame: frameIndex(an, phase) });
   }
   return out.sort((p, q) => p.y - q.y);
 }
@@ -687,27 +730,45 @@ function stageSize() {
   return [cv.width, cv.height];
 }
 
+function drawZone(area, color, label, W, H, dpr, handles = false, active = false) {
+  const x = area.x * W, y = area.y * H, w = area.w * W, h = area.h * H;
+  ctx.fillStyle = active ? `${color}22` : `${color}0c`;
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = (active ? 2 : 1.25) * dpr;
+  ctx.setLineDash(active ? [8 * dpr, 6 * dpr] : [4 * dpr, 5 * dpr]);
+  ctx.strokeRect(x, y, w, h);
+  ctx.setLineDash([]);
+  if (handles) {
+    ctx.fillStyle = color;
+    for (const [hx, hy] of corners(area)) ctx.fillRect(hx * W - 6 * dpr, hy * H - 6 * dpr, 12 * dpr, 12 * dpr);
+  }
+  ctx.fillStyle = color;
+  ctx.font = `${12 * dpr}px Segoe UI`;
+  ctx.fillText(label, x + 8 * dpr, y + 18 * dpr);
+}
+
 function drawStage() {
   if (!P) return;
   const [W, H] = stageSize();
   const dpr = window.devicePixelRatio || 1;
   ctx.clearRect(0, 0, W, H);
   if (bgImg) ctx.drawImage(bgImg, 0, 0, W, H);
-  const ar = P.area;
-  const x = ar.x * W, y = ar.y * H, w = ar.w * W, h = ar.h * H;
-  ctx.fillStyle = drag ? "rgba(243,179,61,0.15)" : "rgba(243,179,61,0.05)";
-  ctx.fillRect(x, y, w, h);
-  ctx.strokeStyle = "#f3b33d";
-  ctx.lineWidth = 2 * dpr;
-  ctx.setLineDash([8 * dpr, 6 * dpr]);
-  ctx.strokeRect(x, y, w, h);
-  ctx.setLineDash([]);
-  ctx.fillStyle = "#f3b33d";
-  for (const [hx, hy] of corners()) ctx.fillRect(hx * W - 6 * dpr, hy * H - 6 * dpr, 12 * dpr, 12 * dpr);
-  ctx.font = `${12 * dpr}px Segoe UI`;
-  ctx.fillText("Vùng chân con vật đi được", x + 8 * dpr, y + 18 * dpr);
+  const selected = editTarget();
+  const globalActive = !selected || !selected.area;
+  drawZone(P.area, "#f3b33d", globalActive ? "Vùng chung" : "Vùng chung / phối cảnh", W, H, dpr,
+    !selected || !selected.area, globalActive && !!drag);
+  for (const a of P.animals) {
+    if (!a.area) continue;
+    const active = selected?.id === a.id;
+    drawZone(a.area, active ? "#4fb0ff" : "#b28cff", `Vùng ${a.name}`, W, H, dpr, active, active && !!drag);
+  }
+  if (selected && !selected.area) {
+    drawZone(P.area, "#4fb0ff", `Vùng của ${selected.name} · kéo để tách riêng`, W, H, dpr, true, !!drag);
+  }
 
   live.hits = [];
+
   const ready = live.tl && P.animals.some(a => a.enabled && ANIMS.some(n => hasClip(a, n)));
   if (!ready) {
     ctx.fillStyle = "rgba(0,0,0,.55)";
@@ -726,14 +787,15 @@ function drawStage() {
     if (!sheet?.bmp) continue;
     const unit = unitOf(s.a, refW) * k * depthOf(s.y, refH) * s.an.scale / s.an.px_scale;
     const sw = s.an.width * unit, sh = s.an.height * unit;
-    const fx = s.x * k, fy = s.y * k;
+    const fx = s.x * k, groundY = s.y * k, fy = (s.y - s.z) * k;
     if (P.render.shadow && P.render.shadow_opacity > 0) {
       const shh = Math.max(3, sh * 0.14);
       ctx.save();
       ctx.filter = `blur(${Math.max(1, shh * 0.45)}px)`;
-      ctx.fillStyle = `rgba(0,0,0,${P.render.shadow_opacity})`;
+      const fade = 1 / (1 + s.z * k / Math.max(2 * sh, 1));
+      ctx.fillStyle = `rgba(0,0,0,${P.render.shadow_opacity * fade})`;
       ctx.beginPath();
-      ctx.ellipse(fx, fy - shh * 0.1, Math.max(2, sw * 0.4), shh / 2, 0, 0, Math.PI * 2);
+      ctx.ellipse(fx, groundY - shh * 0.1, Math.max(2, sw * 0.4 * (0.6 + 0.4 * fade)), shh / 2, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
@@ -805,8 +867,7 @@ $("#liveBtn").onclick = () => { live.playing = !live.playing; liveBtnText(); };
 $("#liveSeed").onclick = () => { live.seed = Math.floor(Math.random() * 1e9); live.t = 0; refreshLive(); };
 liveBtnText();
 
-function corners() {
-  const a = P.area;
+function corners(a = editArea()) {
   return [[a.x, a.y], [a.x + a.w, a.y], [a.x, a.y + a.h], [a.x + a.w, a.y + a.h]];
 }
 
@@ -824,20 +885,29 @@ cv.addEventListener("pointerdown", e => {
   if (!P) return;
   const [px, py] = pos(e);
   const ci = onCorner(px, py);
-  const a = P.area;
+  const animal = editTarget();
+  let a = editArea();
   if (ci < 0) {
     const hit = hitAnimal(px, py);
     if (hit) { selectAnimal(hit.id, true); return; }
   }
-  if (ci >= 0) drag = { mode: "corner", ci };
-  else if (px > a.x && px < a.x + a.w && py > a.y && py < a.y + a.h) drag = { mode: "move", dx: px - a.x, dy: py - a.y };
-  else drag = { mode: "new", x0: px, y0: py };
+  if (animal) {
+    const hadArea = !!animal.area;
+    a = editAreaForAnimal(animal);
+    if (!hadArea) {
+      $(".ownarea", $(`.animal[data-id="${animal.id}"]`)).checked = true;
+      updateAreaMode();
+    }
+  }
+  if (ci >= 0) drag = { mode: "corner", ci, area: a };
+  else if (px > a.x && px < a.x + a.w && py > a.y && py < a.y + a.h) drag = { mode: "move", dx: px - a.x, dy: py - a.y, area: a };
+  else drag = { mode: "new", x0: px, y0: py, area: a };
   cv.setPointerCapture(e.pointerId);
 });
 cv.addEventListener("pointermove", e => {
   if (!P) return;
   const [px, py] = pos(e).map(v => clamp(v, 0, 1));
-  const a = P.area;
+  const a = drag?.area || editArea();
   if (!drag) {
     cv.style.cursor = onCorner(px, py) >= 0 ? "nwse-resize" : hitAnimal(px, py) ? "pointer"
       : (px > a.x && px < a.x + a.w && py > a.y && py < a.y + a.h) ? "move" : "crosshair";
@@ -849,8 +919,8 @@ cv.addEventListener("pointermove", e => {
   } else {
     let x0, y0;
     if (drag.mode === "corner") {
-      [x0, y0] = corners()[3 - drag.ci];
-      drag = { mode: "new", x0, y0 };
+      [x0, y0] = corners(a)[3 - drag.ci];
+      drag = { mode: "new", x0, y0, area: a };
     } else ({ x0, y0 } = drag);
     a.x = Math.min(x0, px); a.y = Math.min(y0, py);
     a.w = Math.max(Math.abs(px - x0), 0.02); a.h = Math.max(Math.abs(py - y0), 0.02);
@@ -858,6 +928,10 @@ cv.addEventListener("pointermove", e => {
 });
 cv.addEventListener("pointerup", () => {
   if (drag) { drag = null; scheduleSave(); }
+});
+$("#areaGlobal").onclick = () => selectAnimal(null);
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && selectedAnimal) selectAnimal(null);
 });
 buildPresetPicker();
 requestAnimationFrame(tick);

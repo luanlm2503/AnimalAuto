@@ -10,7 +10,7 @@ import math
 import random
 from dataclasses import dataclass, field
 
-from .models import Animal, Project
+from .models import Animal, Area, Project
 
 REF_W = 1920.0
 SEG_MOVE, SEG_IDLE, SEG_TURN, SEG_HIDDEN = "move", "idle", "turn", "hidden"
@@ -34,11 +34,13 @@ class Seg:
     dist: float = 0.0
     phase0: float = 0.0
     offscreen: bool = False
+    z0: float = 0.0         # altitude in reference pixels above the ground point
+    z1: float = 0.0
 
     def to_list(self):
         return [round(self.t0, 3), round(self.t1, 3), self.kind, round(self.x0, 1), round(self.y0, 1),
                 round(self.cx, 1), round(self.cy, 1), round(self.x1, 1), round(self.y1, 1),
-                self.anim, self.face, self.offscreen]
+                self.anim, self.face, self.offscreen, round(self.z0, 1), round(self.z1, 1)]
 
 
 @dataclass(slots=True)
@@ -136,26 +138,36 @@ class Bounds:
         return self.x1 - self.x0
 
 
+def area_for(project: Project, animal: Animal) -> Area:
+    """Return the animal's walkable area, falling back to the project default."""
+    return animal.area or project.area
+
+
 def animal_bounds(project: Project, animal: Animal, ref_w: float, ref_h: float, depth: bool) -> Bounds:
     sw, sh = sprite_ref_box(animal, ref_w)
     if depth:
         sw, sh = sw * DEPTH_MAX, sh * DEPTH_MAX
-    ar = project.area
+    ar = area_for(project, animal)
     half = sw / 2 + 2
     return Bounds(max(ar.x * ref_w, 0) + half, max(ar.y * ref_h, sh + 2),
                   min((ar.x + ar.w) * ref_w, ref_w) - half, min((ar.y + ar.h) * ref_h, ref_h - 2))
 
 
 class _Walker:
-    def __init__(self, ai, k, animal, bounds, ref_w, rng):
-        self.ai, self.k, self.animal, self.b, self.ref_w, self.rng = ai, k, animal, bounds, ref_w, rng
+    def __init__(self, ai, k, animal, bounds, ref_w, ref_h, rng):
+        self.ai, self.k, self.animal, self.b, self.ref_w, self.ref_h, self.rng = ai, k, animal, bounds, ref_w, ref_h, rng
         self.track = Track(ai, k)
         self.t = 0.0
         self.x, self.y = 0.0, 0.0
         self.face = 1
-        self.sw = sprite_ref_box(animal, ref_w)[0] * DEPTH_MAX
+        self.z = 0.0
+        self.sw, self.sh = sprite_ref_box(animal, ref_w)
+        self.sw *= DEPTH_MAX
+        self.sh *= DEPTH_MAX
         w = animal.behaviors
         self.choices = [(k_, max(float(w.get(k_, 0)), 0.0)) for k_ in ("walk", "run", "idle", "turn", "hide")]
+        if animal.flight.enabled:
+            self.choices.append(("fly", max(float(w.get("fly", 0)), 0.0)))
         if sum(v for _, v in self.choices) <= 0:
             self.choices = [("walk", 1.0), ("idle", 1.0)]
 
@@ -180,40 +192,51 @@ class _Walker:
         self.track.segs.append(seg)
         self.t = seg.t1
         self.x, self.y = seg.x1, seg.y1
+        self.z = seg.z1
 
     def idle(self, dur, anim="idle"):
         self.add(Seg(self.t, self.t + dur, SEG_IDLE, self.x, self.y, self.x, self.y, self.x, self.y,
-                     anim, self.face, phase0=self.rng.uniform(0, 1000)))
+                     anim, self.face, phase0=self.rng.uniform(0, 1000), z0=self.z, z1=self.z))
 
     def turn(self):
         dur = self.rng.uniform(0.25, 0.6)
         self.add(Seg(self.t, self.t + dur, SEG_TURN, self.x, self.y, self.x, self.y, self.x, self.y,
-                     "idle", self.face, phase0=self.rng.uniform(0, 1000)))
+                     "idle", self.face, phase0=self.rng.uniform(0, 1000), z0=self.z, z1=self.z))
         self.face = -self.face
 
-    def move(self, x1, y1, kind, offscreen=False):
-        x0, y0 = self.x, self.y
-        d = math.hypot(x1 - x0, y1 - y0)
-        if d < 3:
+    def move(self, x1, y1, kind, offscreen=False, z1=0.0, anim=None):
+        x0, y0, z0 = self.x, self.y, self.z
+        d = math.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2 + (z1 - z0) ** 2)
+        if d < 3 and abs(z1 - z0) < 1:
             self.idle(self._pause(0.5))
             return
         # gentle curve: control point pushed sideways from the midpoint
         mx, my = (x0 + x1) / 2, (y0 + y1) / 2
-        off = self.rng.uniform(-0.3, 0.3) * d
-        nx, ny = -(y1 - y0) / d, (x1 - x0) / d
+        planar_d = math.hypot(x1 - x0, y1 - y0)
+        off = self.rng.uniform(-0.3, 0.3) * max(planar_d, abs(z1 - z0))
+        nx, ny = (-(y1 - y0) / planar_d, (x1 - x0) / planar_d) if planar_d > 1e-6 else (0.0, 0.0)
         cx, cy = mx + nx * off, my + ny * off
         if not offscreen:
             cx, cy = self.b.clamp(cx, cy)
         else:
             cy = min(max(cy, self.b.y0), self.b.y1)
-        length = bezier_len(x0, y0, cx, cy, x1, y1)
-        speed = self._speed(kind)
+        # Include the eased altitude path when estimating flight duration and gait distance.
+        length, px, py, pz = 0.0, x0, y0, z0
+        for j in range(1, 13):
+            u = j / 12
+            qx, qy = bezier(x0, y0, cx, cy, x1, y1, u)
+            qz = z0 + (z1 - z0) * (u * u * (3 - 2 * u))
+            length += math.sqrt((qx - px) ** 2 + (qy - py) ** 2 + (qz - pz) ** 2)
+            px, py, pz = qx, qy, qz
+        length = max(length, d)
+        speed = max(5.0, self.rng.uniform(*sorted(self.animal.flight.speed))) if z0 > 0 or z1 > 0 else self._speed(kind)
         accel = self.rng.uniform(0.08, 0.16) if kind == "run" else self.rng.uniform(0.15, 0.28)
         dur = length / (speed * (1 - accel))
         if abs(x1 - x0) > 4:
             self.face = 1 if x1 > x0 else -1
-        self.add(Seg(self.t, self.t + dur, SEG_MOVE, x0, y0, cx, cy, x1, y1, kind, self.face,
-                     accel, length, self.rng.uniform(0, 1000), offscreen))
+        seg = Seg(self.t, self.t + dur, SEG_MOVE, x0, y0, cx, cy, x1, y1, anim or kind, self.face,
+                  accel, length, self.rng.uniform(0, 1000), offscreen, z0, z1)
+        self.add(seg)
 
     def destination(self, dmin, dmax, others, side=0):
         best, best_score = None, -1e18
@@ -267,6 +290,29 @@ class _Walker:
             dur = self._pause(self.rng.uniform(2.0, 5.0))
             self.add(Seg(self.t, self.t + dur, SEG_HIDDEN, self.x, self.y, self.x, self.y,
                          self.x, self.y, "idle", self.face, offscreen=True))
+        elif b == "fly":
+            self.fly_sortie(others)
+
+    def fly_sortie(self, others):
+        cfg = self.animal.flight
+        lo, hi = sorted(cfg.altitude)
+        # Keep the whole sprite below the top edge; altitude is measured upward
+        # from its ground point and configured as a frame-height fraction.
+        zmax = min(max(0.0, hi * self.ref_h), max(0.0, self.y - self.sh - 8))
+        zmin = min(max(0.0, lo * self.ref_h), zmax)
+        legs_lo, legs_hi = sorted(cfg.legs)
+        legs = self.rng.randint(max(1, legs_lo), max(1, legs_hi))
+        for _ in range(legs):
+            x1, y1 = self.destination(self.b.w * 0.08, self.b.w * 0.45, others)
+            z1 = self.rng.uniform(zmin, zmax)
+            self.move(x1, y1, "run", z1=z1, anim=cfg.anim)
+            if self.z > 0 and self.rng.random() < cfg.hover:
+                self.idle(self.rng.uniform(0.2, 0.7), anim=cfg.anim)
+        x1, y1 = self.b.random(self.rng)
+        # Land with a flutter animation too; altitude eases smoothly to zero.
+        self.move(x1, y1, "run", z1=0.0, anim=cfg.anim)
+        if self.rng.random() < 0.45:
+            self.idle(self._pause(), anim="idle")
 
     def _enter(self, others):
         left = self.rng.random() < 0.5
@@ -286,7 +332,7 @@ def build_timeline(project: Project, seed: int, duration: float, aspect: float =
             continue
         b = animal_bounds(project, animal, ref_w, ref_h, depth)
         for k in range(max(1, animal.count)):
-            walkers.append(_Walker(ai, k, animal, b, ref_w, random.Random(f"{seed}:{ai}:{k}")))
+            walkers.append(_Walker(ai, k, animal, b, ref_w, ref_h, random.Random(f"{seed}:{ai}:{k}")))
 
     # spread the start positions
     placed = []

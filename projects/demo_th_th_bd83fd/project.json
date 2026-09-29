@@ -4,17 +4,42 @@
   "background": "assets/background_8d6a.png",
   "area": {
     "x": 0.0,
-    "y": 0.5887791882150134,
+    "y": 0.5785133204049197,
     "w": 1.0,
-    "h": 0.4112208117849866
+    "h": 0.42148667959508035
   },
   "animals": [
     {
       "id": "chu_t_x_m_f233",
       "name": "chuột xám",
       "enabled": true,
-      "count": 7,
-      "size_pct": 10.5,
+      "count": 2,
+      "area": {
+        "x": 0.0,
+        "y": 0.013118744193694076,
+        "w": 1.0,
+        "h": 0.42148667959508035
+      },
+      "flight": {
+        "enabled": false,
+        "anim": "run",
+        "speed": [
+          250.0,
+          450.0
+        ],
+        "altitude": [
+          0.12,
+          0.32
+        ],
+        "legs": [
+          1,
+          3
+        ],
+        "hover": 0.0,
+        "wobble": 0.0,
+        "wobble_hz": 2.0
+      },
+      "size_pct": 7.0,
       "facing": "right",
       "anims": {
         "idle": {
@@ -76,20 +101,20 @@
       },
       "walk_speed": [
         60.0,
-        124.0
+        120.0
       ],
       "run_speed": [
-        250.0,
-        450.0
+        300.0,
+        500.0
       ],
       "pause": [
-        0.4,
-        3.0
+        0.3,
+        2.5
       ],
       "behaviors": {
         "walk": 30.0,
-        "run": 30.0,
-        "idle": 25.0,
+        "run": 35.0,
+        "idle": 20.0,
         "turn": 8.0,
         "hide": 7.0
       },
@@ -109,19 +134,44 @@
       ]
     },
     {
-      "id": "hamster_59cf",
-      "name": "hamster",
+      "id": "chim_88f0",
+      "name": "chim",
       "enabled": true,
       "count": 1,
-      "size_pct": 6.0,
+      "area": {
+        "x": 0.04,
+        "y": 0.56,
+        "w": 0.92,
+        "h": 0.4
+      },
+      "flight": {
+        "enabled": true,
+        "anim": "run",
+        "speed": [
+          260.0,
+          430.0
+        ],
+        "altitude": [
+          0.13,
+          0.32
+        ],
+        "legs": [
+          1,
+          3
+        ],
+        "hover": 0.05,
+        "wobble": 2.0,
+        "wobble_hz": 2.4
+      },
+      "size_pct": 8.0,
       "facing": "right",
       "anims": {
         "idle": {
-          "src": "src/animal1_idle_353c.mp4",
+          "src": "src/chim_idle_78ba.zip",
           "frames": 48,
           "fps": 24.0,
-          "width": 192,
-          "height": 108,
+          "width": 202,
+          "height": 144,
           "px_scale": 1.0,
           "loop": "loop",
           "native_speed": 0.0,
@@ -130,30 +180,21 @@
           "trim_end": 0.0,
           "auto_loop": false,
           "stabilize": true,
-          "key_used": null
+          "key_used": {
+            "enabled": true,
+            "tolerance": 22.0,
+            "softness": 14.0,
+            "shadow": 0.0,
+            "despill": 0.8,
+            "keep_largest": true
+          }
         },
         "walk": {
-          "src": "src/animal1_walk_5d97.mp4",
-          "frames": 48,
-          "fps": 24.0,
-          "width": 192,
-          "height": 110,
-          "px_scale": 1.0,
-          "loop": "loop",
-          "native_speed": 0.0,
-          "scale": 1.0,
-          "trim_start": 0.0,
-          "trim_end": 0.0,
-          "auto_loop": false,
-          "stabilize": true,
-          "key_used": null
-        },
-        "run": {
-          "src": "src/animal1_run_3bca.mp4",
+          "src": "src/chim_walk_b5a1.zip",
           "frames": 24,
           "fps": 24.0,
-          "width": 203,
-          "height": 114,
+          "width": 202,
+          "height": 142,
           "px_scale": 1.0,
           "loop": "loop",
           "native_speed": 0.0,
@@ -162,42 +203,69 @@
           "trim_end": 0.0,
           "auto_loop": false,
           "stabilize": true,
-          "key_used": null
+          "key_used": {
+            "enabled": true,
+            "tolerance": 22.0,
+            "softness": 14.0,
+            "shadow": 0.0,
+            "despill": 0.8,
+            "keep_largest": true
+          }
+        },
+        "run": {
+          "src": "src/chim_run_430e.zip",
+          "frames": 24,
+          "fps": 24.0,
+          "width": 202,
+          "height": 142,
+          "px_scale": 1.0,
+          "loop": "loop",
+          "native_speed": 0.0,
+          "scale": 1.0,
+          "trim_start": 0.0,
+          "trim_end": 0.0,
+          "auto_loop": false,
+          "stabilize": true,
+          "key_used": {
+            "enabled": true,
+            "tolerance": 22.0,
+            "softness": 14.0,
+            "shadow": 0.0,
+            "despill": 0.8,
+            "keep_largest": true
+          }
         }
       },
       "key": {
         "enabled": true,
         "tolerance": 22.0,
         "softness": 14.0,
-        "shadow": 25.0,
+        "shadow": 0.0,
         "despill": 0.8,
         "keep_largest": true
       },
       "walk_speed": [
-        60.0,
-        120.0
+        35.0,
+        70.0
       ],
       "run_speed": [
-        250.0,
-        450.0
+        180.0,
+        300.0
       ],
       "pause": [
-        0.4,
-        3.0
+        0.8,
+        3.5
       ],
       "behaviors": {
-        "walk": 30.0,
-        "run": 30.0,
-        "idle": 25.0,
-        "turn": 8.0,
-        "hide": 7.0
+        "walk": 18.0,
+        "run": 0.0,
+        "idle": 34.0,
+        "turn": 3.0,
+        "hide": 0.0,
+        "fly": 45.0
       },
-      "sounds": [
-        "sounds/animal1_squeak1_48dd.wav",
-        "sounds/animal1_squeak2_1187.wav",
-        "sounds/animal1_squeak3_baba.wav"
-      ],
-      "sound_enabled": true,
+      "sounds": [],
+      "sound_enabled": false,
       "sound_interval": [
         6.0,
         25.0
@@ -208,19 +276,44 @@
       ]
     },
     {
-      "id": "b_r_a_05b6",
-      "name": "bọ rùa",
+      "id": "than_lan_47af",
+      "name": "thằn lằn",
       "enabled": true,
-      "count": 3,
-      "size_pct": 4.5,
-      "facing": "left",
+      "count": 1,
+      "area": {
+        "x": 0.04,
+        "y": 0.56,
+        "w": 0.92,
+        "h": 0.4
+      },
+      "flight": {
+        "enabled": false,
+        "anim": "run",
+        "speed": [
+          250.0,
+          450.0
+        ],
+        "altitude": [
+          0.12,
+          0.32
+        ],
+        "legs": [
+          1,
+          3
+        ],
+        "hover": 0.0,
+        "wobble": 0.0,
+        "wobble_hz": 2.0
+      },
+      "size_pct": 8.0,
+      "facing": "right",
       "anims": {
         "idle": {
-          "src": "src/animal2_idle_f9db.mp4",
+          "src": "src/than_lan_idle_9b51.zip",
           "frames": 48,
           "fps": 24.0,
-          "width": 204,
-          "height": 128,
+          "width": 221,
+          "height": 79,
           "px_scale": 1.0,
           "loop": "loop",
           "native_speed": 0.0,
@@ -229,14 +322,21 @@
           "trim_end": 0.0,
           "auto_loop": false,
           "stabilize": true,
-          "key_used": null
+          "key_used": {
+            "enabled": true,
+            "tolerance": 22.0,
+            "softness": 14.0,
+            "shadow": 0.0,
+            "despill": 0.8,
+            "keep_largest": true
+          }
         },
         "walk": {
-          "src": "src/animal2_walk_744f.mp4",
-          "frames": 48,
+          "src": "src/than_lan_walk_c04f.zip",
+          "frames": 24,
           "fps": 24.0,
-          "width": 204,
-          "height": 128,
+          "width": 221,
+          "height": 82,
           "px_scale": 1.0,
           "loop": "loop",
           "native_speed": 0.0,
@@ -245,58 +345,211 @@
           "trim_end": 0.0,
           "auto_loop": false,
           "stabilize": true,
-          "key_used": null
+          "key_used": {
+            "enabled": true,
+            "tolerance": 22.0,
+            "softness": 14.0,
+            "shadow": 0.0,
+            "despill": 0.8,
+            "keep_largest": true
+          }
         },
         "run": {
-          "src": "src/animal2_run_4280.mp4",
+          "src": "src/than_lan_run_82c3.zip",
           "frames": 24,
           "fps": 24.0,
-          "width": 204,
-          "height": 128,
+          "width": 221,
+          "height": 82,
           "px_scale": 1.0,
           "loop": "loop",
           "native_speed": 0.0,
-          "scale": 0.95,
+          "scale": 1.0,
           "trim_start": 0.0,
           "trim_end": 0.0,
           "auto_loop": false,
           "stabilize": true,
-          "key_used": null
+          "key_used": {
+            "enabled": true,
+            "tolerance": 22.0,
+            "softness": 14.0,
+            "shadow": 0.0,
+            "despill": 0.8,
+            "keep_largest": true
+          }
         }
       },
       "key": {
         "enabled": true,
         "tolerance": 22.0,
         "softness": 14.0,
-        "shadow": 25.0,
+        "shadow": 0.0,
         "despill": 0.8,
         "keep_largest": true
       },
       "walk_speed": [
-        70.0,
-        130.0
+        35.0,
+        70.0
       ],
       "run_speed": [
-        350.0,
-        600.0
+        320.0,
+        560.0
       ],
       "pause": [
-        1.0,
-        5.0
+        0.8,
+        3.5
       ],
       "behaviors": {
-        "walk": 30.0,
-        "run": 15.0,
-        "idle": 45.0,
-        "turn": 8.0,
-        "hide": 2.0
+        "walk": 23.0,
+        "run": 16.0,
+        "idle": 52.0,
+        "turn": 7.0,
+        "hide": 2.0,
+        "fly": 0.0
       },
-      "sounds": [
-        "sounds/animal2_squeak1_5e1f.wav",
-        "sounds/animal2_squeak2_5de9.wav",
-        "sounds/animal2_squeak3_39ac.wav"
+      "sounds": [],
+      "sound_enabled": false,
+      "sound_interval": [
+        6.0,
+        25.0
       ],
-      "sound_enabled": true,
+      "sound_volume": [
+        0.4,
+        0.8
+      ]
+    },
+    {
+      "id": "buom_e801",
+      "name": "bướm",
+      "enabled": true,
+      "count": 2,
+      "area": {
+        "x": 0.04,
+        "y": 0.56,
+        "w": 0.92,
+        "h": 0.4
+      },
+      "flight": {
+        "enabled": true,
+        "anim": "run",
+        "speed": [
+          105.0,
+          175.0
+        ],
+        "altitude": [
+          0.07,
+          0.26
+        ],
+        "legs": [
+          2,
+          4
+        ],
+        "hover": 0.38,
+        "wobble": 12.0,
+        "wobble_hz": 3.2
+      },
+      "size_pct": 5.0,
+      "facing": "right",
+      "anims": {
+        "idle": {
+          "src": "src/buom_idle_0b4d.zip",
+          "frames": 48,
+          "fps": 24.0,
+          "width": 169,
+          "height": 134,
+          "px_scale": 1.0,
+          "loop": "loop",
+          "native_speed": 0.0,
+          "scale": 1.0,
+          "trim_start": 0.0,
+          "trim_end": 0.0,
+          "auto_loop": false,
+          "stabilize": true,
+          "key_used": {
+            "enabled": true,
+            "tolerance": 22.0,
+            "softness": 14.0,
+            "shadow": 0.0,
+            "despill": 0.8,
+            "keep_largest": true
+          }
+        },
+        "walk": {
+          "src": "src/buom_walk_25d6.zip",
+          "frames": 24,
+          "fps": 24.0,
+          "width": 169,
+          "height": 134,
+          "px_scale": 1.0,
+          "loop": "loop",
+          "native_speed": 0.0,
+          "scale": 1.0,
+          "trim_start": 0.0,
+          "trim_end": 0.0,
+          "auto_loop": false,
+          "stabilize": true,
+          "key_used": {
+            "enabled": true,
+            "tolerance": 22.0,
+            "softness": 14.0,
+            "shadow": 0.0,
+            "despill": 0.8,
+            "keep_largest": true
+          }
+        },
+        "run": {
+          "src": "src/buom_run_555f.zip",
+          "frames": 24,
+          "fps": 24.0,
+          "width": 169,
+          "height": 134,
+          "px_scale": 1.0,
+          "loop": "loop",
+          "native_speed": 0.0,
+          "scale": 1.0,
+          "trim_start": 0.0,
+          "trim_end": 0.0,
+          "auto_loop": false,
+          "stabilize": true,
+          "key_used": {
+            "enabled": true,
+            "tolerance": 22.0,
+            "softness": 14.0,
+            "shadow": 0.0,
+            "despill": 0.8,
+            "keep_largest": true
+          }
+        }
+      },
+      "key": {
+        "enabled": true,
+        "tolerance": 22.0,
+        "softness": 14.0,
+        "shadow": 0.0,
+        "despill": 0.8,
+        "keep_largest": true
+      },
+      "walk_speed": [
+        10.0,
+        25.0
+      ],
+      "run_speed": [
+        80.0,
+        140.0
+      ],
+      "pause": [
+        0.8,
+        3.5
+      ],
+      "behaviors": {
+        "walk": 5.0,
+        "run": 0.0,
+        "idle": 35.0,
+        "turn": 2.0,
+        "hide": 0.0,
+        "fly": 58.0
+      },
+      "sounds": [],
+      "sound_enabled": false,
       "sound_interval": [
         6.0,
         25.0
@@ -310,14 +563,14 @@
   "ambience": "",
   "ambience_volume": 0.3,
   "render": {
-    "duration": "00:10:00",
-    "width": 1920,
-    "height": 1080,
-    "fps": 30,
+    "duration": "08:00:00",
+    "width": 3840,
+    "height": 2160,
+    "fps": 60,
     "seed": 2078328551,
     "shadow": true,
-    "shadow_opacity": 0.35,
-    "depth_scale": false,
+    "shadow_opacity": 0.15,
+    "depth_scale": true,
     "encoder": "auto",
     "crf": 20,
     "chunk_seconds": 300
